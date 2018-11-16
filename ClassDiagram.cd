@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CAboutDlg" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAABAABAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>10_12_TImer_pre_1Dlg.cpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMy10_12_TImer_pre_1App" Collapsed="true">
+    <Position X="3.5" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAAAAA=</HashCode>
+      <FileName>10_12_TImer_pre_1.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StopWatch_Assert" Collapsed="true">
+    <Position X="3.5" Y="1.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQAAAAAAAAAIAAAAAgAAAAAAAAAAAAAA=</HashCode>
+      <FileName>StopWatch_Assert.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="メイリオ" Size="9" />
+</ClassDiagram>
