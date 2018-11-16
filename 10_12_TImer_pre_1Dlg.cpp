@@ -11,10 +11,21 @@
 #pragma comment( lib, "winmm.lib")
 #include "StopWatch_Assert.h"
 #include "StopWatch_Const.h"
+#include <sstream>
+#include <string>
+#include <direct.h> // mkdir
+#include <sys/stat.h> // ファイルの状態を取得
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+
+//***********************************************************
+// @@@@ 追加実装：構造体のオブジェクト定義
+//***********************************************************
+filesave FileSave[__LAP_COUNT_MAX] = {
+	0
+};
 
 // アプリケーションのバージョン情報に使われる CAboutDlg ダイアログ
 
@@ -105,6 +116,7 @@ BEGIN_MESSAGE_MAP(CMy10_12_TImer_pre_1Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON3, &CMy10_12_TImer_pre_1Dlg::OnBnClickedButton3)
 	ON_WM_TIMER()
 	ON_WM_CTLCOLOR()
+	ON_BN_CLICKED(IDOK, &CMy10_12_TImer_pre_1Dlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
@@ -292,14 +304,10 @@ void CMy10_12_TImer_pre_1Dlg::OnBnClickedButton2()
 	Laptime_On = true; 
 
 	// ラップのカウント上限は100カウントとする
-	if(GetLabelLapCount(__LABEL_COUNT_LAP_1) >= 100){
+	if(GetLabelLapCount(__LABEL_COUNT_LAP_1) > __LAP_COUNT_MAX){
 		// エラーコード表示
 		StopWatch_Assert Assert;
 		Assert.ExecAssert(__ERR_CODE001);
-
-		// ラップボタンを非表示
-	    //CButton *button2=(CButton*)GetDlgItem(IDC_BUTTON2);
-	    //button2->EnableWindow(FALSE);
 
 	}
 	else{
@@ -363,6 +371,7 @@ void CMy10_12_TImer_pre_1Dlg::OnBnClickedButton2()
 		// ★　m_label_count_lap_1 ++;
 		SetLabelLapCount(__LABEL_COUNT_LAP_1,(GetLabelLapCount(__LABEL_COUNT_LAP_1) + 1));
 	}
+
 	Laptime_On = false; 
 	UpdateData(FALSE);
 }
@@ -444,6 +453,12 @@ CString CMy10_12_TImer_pre_1Dlg::ExecTimeCastProcess(void)
 	// 表示フォーマットにキャスト
 	str.Format(L"%02d:%02.3f",tm_min ,tm_sec);
 
+	//***********************************************************
+	// @@@@ 追加実装：ファイル出力構造体にスプリットデータを保存
+	//***********************************************************
+
+	FileSave[(GetLabelLapCount(__LABEL_COUNT_LAP_1))-1].svesplittime = (float)tm_min + tm_sec;
+
 	return str;
 
 }
@@ -498,6 +513,34 @@ CString CMy10_12_TImer_pre_1Dlg::ExecLapTimeCastProcess(void)
 	    str.Format(L"%02d:%02.3f",tm_min ,tm_sec);
 
 	}
+
+	//***********************************************************
+	// @@@@@ 追加実装:ラップタイムをファイル構造体に保存
+    //***********************************************************
+
+	// ラップラベルカウントの初期値=1のため、-1する
+	FileSave[(GetLabelLapCount(__LABEL_COUNT_LAP_1))-1].savelaptime = (float)tm_min + tm_sec;
+
+	time_t rtime = 0;
+	time_t atime = 0;
+
+	// 現在時刻を取得
+	rtime = time(&atime);
+		if(rtime == -1){
+		return str;
+	}
+
+	errno_t error;
+
+	// グローバルタイムをローカルタイムに変換
+	struct tm strtim;
+	error = localtime_s(&strtim,&rtime);
+
+	char ascstr[40];
+	asctime_s(ascstr,sizeof(ascstr),&strtim);
+
+	// 出力ファイル構造体に保存
+	asctime_s(FileSave[(GetLabelLapCount(__LABEL_COUNT_LAP_1))-1].localtime,sizeof(FileSave[(GetLabelLapCount(__LABEL_COUNT_LAP_1))-1].localtime),&strtim);
 
 	return str;
 }
@@ -715,3 +758,71 @@ void CMy10_12_TImer_pre_1Dlg::SetStrIdcJValue(CString str)
 	m_str_idc_j_value = str;
 }
 
+
+
+void CMy10_12_TImer_pre_1Dlg::OnBnClickedOk()
+{
+	// TODO: ここにコントロール通知ハンドラー コードを追加します。
+
+	//***********************************************************
+	// @@@@ 追加実装：ファイル出力処理
+	//***********************************************************
+
+	if(FileSave[0].savelaptime == 0){
+		// ラップボタンを押さない場合はファイルオープンしない
+	}
+	else {
+
+		// フォルダを作成
+		char *dir = __FOLDER_PATH_1;
+
+		if (_mkdir(dir) == 0){
+		}
+		else {
+		}
+
+		// ファイルオープン
+		FILE *fp = 0;
+		char file[50];
+		int i = 0;
+
+		struct stat buf;
+
+		time_t rtime = 0;
+		time_t atime = 0;
+
+		// 現在時刻を取得
+		rtime = time(&atime);
+			if(rtime == -1){
+			
+		}
+		tm tim;
+		errno_t error;
+		error = localtime_s(&tim,&rtime);
+
+		// ファイルの存在を確認する
+		do
+		{
+			i++;
+			sprintf_s(file,"C:\\MFC_Debug_Stopwatch\\Stopwatch-%d%d-%d.txt",tim.tm_mon,tim.tm_mday,i) ;
+		} while (stat(file, &buf) == 0);
+		 
+		fopen_s(&fp, file, "w");
+
+
+		// 構造体のポインタ
+		filesave *pFileSave;
+		pFileSave = FileSave;
+
+		// 計測データの日時/ラップタイム/スプリットタイムをファイルに出力
+		for (int i =0; i < (GetLabelLapCount(__LABEL_COUNT_LAP_1))-1; ++i){
+			fprintf(fp,"%s Laptime%d：%g SplitTime%d : %g\n", (pFileSave+i)->localtime, i+1,(pFileSave+i)->savelaptime, i +1,(pFileSave+i)->svesplittime);
+		}
+
+		// ファイルクローズ
+		fclose(fp);
+
+	}
+
+	CDialogEx::OnOK();
+}

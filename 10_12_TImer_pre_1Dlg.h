@@ -148,4 +148,6 @@ public:
 	DWORD GetElapsedLapTime(void){
 		return m_elapsed_laptime;
 	}
+public:
+	afx_msg void OnBnClickedOk();
 };
